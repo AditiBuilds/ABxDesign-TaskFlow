@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc && prisma generate",
+    "build": "node scripts/switch-db.js && tsc && prisma generate",
+    "build:prod": "node scripts/switch-db.js && prisma db push && tsc && prisma generate",
+    "db:switch": "node scripts/switch-db.js",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
