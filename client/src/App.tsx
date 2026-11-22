@@ -23,6 +23,7 @@ const AppContent: React.FC = () => {
 
   // Tasks & Stats state
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [recentTasks, setRecentTasks] = useState<Task[]>([]);
   const [stats, setStats] = useState<TaskStats | null>(null);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -48,19 +49,25 @@ const AppContent: React.FC = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
 
-  // Fetch stats summary
-  const fetchStats = useCallback(async () => {
+  // Fetch stats & recent tasks for dashboard independently
+  const fetchDashboardData = useCallback(async () => {
     try {
-      const response = await taskApi.getStats();
-      if (response.success) {
-        setStats(response.data);
+      const [statsRes, recentRes] = await Promise.all([
+        taskApi.getStats(),
+        taskApi.getTasks({ limit: 5, sortBy: 'createdAt', order: 'desc' }),
+      ]);
+      if (statsRes.success) {
+        setStats(statsRes.data);
+      }
+      if (recentRes.success) {
+        setRecentTasks(recentRes.data);
       }
     } catch (err: any) {
-      console.error('Failed to load stats:', err);
+      console.error('Failed to load dashboard data:', err);
     }
   }, []);
 
-  // Fetch tasks with filters
+  // Fetch tasks with filters for TaskListPage
   const fetchTasks = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -78,12 +85,23 @@ const AppContent: React.FC = () => {
 
   // Initial load
   useEffect(() => {
-    fetchStats();
+    fetchDashboardData();
     fetchTasks();
-  }, [fetchStats, fetchTasks]);
+  }, [fetchDashboardData, fetchTasks]);
 
   const handleFilterChange = useCallback((newFilters: Partial<TaskFilterParams>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
+  }, []);
+
+  const handleNavigateToTasks = useCallback((filterOverride?: Partial<TaskFilterParams>) => {
+    if (filterOverride) {
+      setFilters((prev) => ({
+        ...prev,
+        ...filterOverride,
+        page: 1,
+      }));
+    }
+    setActiveTab('tasks');
   }, []);
 
   // Create or Update task handler
@@ -102,7 +120,7 @@ const AppContent: React.FC = () => {
         success('New task created successfully!');
       }
     }
-    await Promise.all([fetchTasks(), fetchStats()]);
+    await Promise.all([fetchTasks(), fetchDashboardData()]);
   };
 
   // Quick Status change handler
@@ -115,10 +133,13 @@ const AppContent: React.FC = () => {
         setTasks((prev) =>
           prev.map((t) => (t.id === id ? { ...t, status } : t))
         );
+        setRecentTasks((prev) =>
+          prev.map((t) => (t.id === id ? { ...t, status } : t))
+        );
         if (viewingTask?.id === id) {
           setViewingTask((prev) => (prev ? { ...prev, status } : null));
         }
-        fetchStats();
+        fetchDashboardData();
       }
     } catch (err: any) {
       error(err.message || 'Failed to update task status.');
@@ -134,7 +155,7 @@ const AppContent: React.FC = () => {
         setIsDetailOpen(false);
         setViewingTask(null);
       }
-      await Promise.all([fetchTasks(), fetchStats()]);
+      await Promise.all([fetchTasks(), fetchDashboardData()]);
     } catch (err: any) {
       error(err.message || 'Failed to delete task.');
     }
@@ -158,9 +179,9 @@ const AppContent: React.FC = () => {
         {activeTab === 'dashboard' ? (
           <DashboardPage
             stats={stats}
-            tasks={tasks}
+            tasks={recentTasks}
             isLoading={isLoading}
-            onNavigateToTasks={() => setActiveTab('tasks')}
+            onNavigateToTasks={handleNavigateToTasks}
             onOpenCreateModal={() => {
               setEditingTask(null);
               setIsCreateEditOpen(true);

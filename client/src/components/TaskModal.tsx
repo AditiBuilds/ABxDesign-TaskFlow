@@ -56,6 +56,17 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     setErrors({});
   }, [initialTask, isOpen]);
 
+  // Keyboard accessibility: Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen && !isSubmitting) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isSubmitting, onClose]);
+
   if (!isOpen) return null;
 
   const validate = (): boolean => {
@@ -232,18 +243,27 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
             {/* Due Date */}
             <div>
-              <label htmlFor="task-due-date" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Due Date
-              </label>
-              <div className="relative">
-                <input
-                  id="task-due-date"
-                  type="date"
-                  value={formData.dueDate}
-                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 focus:outline-none"
-                />
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="task-due-date" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  Due Date
+                </label>
+                {formData.dueDate && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, dueDate: '' })}
+                    className="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium"
+                  >
+                    Clear date
+                  </button>
+                )}
               </div>
+              <input
+                id="task-due-date"
+                type="date"
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm text-slate-900 bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 focus:outline-none"
+              />
             </div>
           </div>
 

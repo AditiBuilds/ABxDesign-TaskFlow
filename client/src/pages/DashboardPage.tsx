@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task, TaskStats, TaskStatus } from '../types/task';
+import { Task, TaskStats, TaskStatus, TaskFilterParams } from '../types/task';
 import { StatsCard } from '../components/StatsCard';
 import { PriorityBadge, StatusBadge } from '../components/TaskBadge';
 import { formatDate, isOverdue } from '../utils/formatters';
@@ -20,7 +20,7 @@ interface DashboardPageProps {
   stats: TaskStats | null;
   tasks: Task[];
   isLoading: boolean;
-  onNavigateToTasks: () => void;
+  onNavigateToTasks: (filters?: Partial<TaskFilterParams>) => void;
   onOpenCreateModal: () => void;
   onViewTask: (task: Task) => void;
   onStatusChange: (id: string, status: TaskStatus) => void;
@@ -81,7 +81,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             Create Task
           </button>
           <button
-            onClick={onNavigateToTasks}
+            onClick={() => onNavigateToTasks()}
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-500/30 text-white font-semibold text-sm hover:bg-indigo-500/40 border border-white/20 transition-all"
           >
             All Tasks
@@ -99,7 +99,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           icon={CheckSquare}
           iconBgColor="bg-indigo-50"
           iconColor="text-indigo-600"
-          onClick={onNavigateToTasks}
+          onClick={() => onNavigateToTasks({ status: 'ALL', priority: 'ALL' })}
         />
         <StatsCard
           title="In Progress"
@@ -108,7 +108,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           icon={PlayCircle}
           iconBgColor="bg-blue-50"
           iconColor="text-blue-600"
-          onClick={onNavigateToTasks}
+          onClick={() => onNavigateToTasks({ status: 'IN_PROGRESS', priority: 'ALL' })}
         />
         <StatsCard
           title="Pending"
@@ -117,7 +117,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           icon={Clock}
           iconBgColor="bg-amber-50"
           iconColor="text-amber-600"
-          onClick={onNavigateToTasks}
+          onClick={() => onNavigateToTasks({ status: 'PENDING', priority: 'ALL' })}
         />
         <StatsCard
           title="Completed"
@@ -126,7 +126,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           icon={CheckCircle2}
           iconBgColor="bg-emerald-50"
           iconColor="text-emerald-600"
-          onClick={onNavigateToTasks}
+          onClick={() => onNavigateToTasks({ status: 'COMPLETED', priority: 'ALL' })}
         />
       </div>
 
@@ -194,7 +194,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
                 <span className="font-semibold">{stats?.overdue} task(s) past due date!</span>
               </div>
               <button
-                onClick={onNavigateToTasks}
+                onClick={() => onNavigateToTasks()}
                 className="font-bold underline hover:text-rose-950"
               >
                 Review
@@ -237,7 +237,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
           <div className="pt-6 border-t border-slate-100">
             <button
-              onClick={onNavigateToTasks}
+              onClick={() => onNavigateToTasks({ priority: 'HIGH', status: 'ALL' })}
               className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1.5"
             >
               Filter High Priority Tasks
@@ -288,7 +288,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <p className="text-xs text-slate-500 mt-0.5">Latest tasks created in the system</p>
           </div>
           <button
-            onClick={onNavigateToTasks}
+            onClick={() => onNavigateToTasks()}
             className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
           >
             View All ({stats?.total || 0})

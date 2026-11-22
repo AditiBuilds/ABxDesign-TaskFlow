@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Task, TaskStatus } from '../types/task';
 import { PriorityBadge, StatusBadge } from './TaskBadge';
 import { formatDate, formatDateTime, isOverdue } from '../utils/formatters';
@@ -21,6 +21,16 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onDelete,
   onStatusChange,
 }) => {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !task) return null;
 
   const overdue = isOverdue(task.dueDate, task.status);
